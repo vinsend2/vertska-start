@@ -19,10 +19,20 @@ var uglify = require("gulp-uglify");
 var babel = require('gulp-babel');
 var concat = require("gulp-concat");
 var sourcemaps = require('gulp-sourcemaps');
+var webpack = require('webpack');
+var webpackStream = require('webpack-stream');
+var webpackConfig = require('./webpack.config.js');
+
+sass.compiler = require('node-sass');
+
+var sass_paths = [
+  'source/sass/**/*.scss',
+  'source/sass/**/*.sass'
+];
 
 // Таск css.
 gulp.task("css", function () {
-  return gulp.src("source/sass/style.sass") // Берет на вход основной файл scss, где происходят импорты
+  return gulp.src("source/sass/style.scss") // Берет на вход основной файл scss, где происходят импорты
     .pipe(sourcemaps.init()) // Иницициализируем плагин для генерации source map. Если не знаешь зачем они, напиши
       .pipe(plumber()) // Плагин для отслеживания ошибок
       .pipe(sass()) // Переводим из sass в css
@@ -81,13 +91,48 @@ gulp.task("scripts", function() {
       .pipe(concat("script.js")) // Склеиваем их в один scripts.js
       .pipe(gulp.dest("build/js")) // Складываем build/js
       .pipe(rename("script.min.js")) // Переименовываем в scripts.min.js
-      .pipe(babel({
-        presets: ['@babel/env'] // Прогоняем через babel. Переводит ES6+ в ES5
-      }))
-      .pipe(uglify()) // Минифицируем
+      // .pipe(webpackStream(webpackConfig, webpack))
+      // .pipe(uglify()) // Минифицируем
     .pipe(sourcemaps.write())
     .pipe(gulp.dest("build/js")); //Скдываем в build/js
 });
+
+
+gulp.task('webpack', function () {
+  return gulp.src('build/js/script.min.js')
+    .pipe(webpackStream({
+      mode: 'production',
+      output: {
+        filename: 'script.min.js',
+      },
+      module: {
+        rules: [
+          {
+            test: /\.(js)$/,
+            exclude: /(node_modules)/,
+            loader: 'babel-loader',
+            query: {
+              presets:  [
+                ["@babel/preset-env", {
+                  "useBuiltIns": "usage",
+                  "corejs": 2, // or 2,
+                  "targets": {
+                      "firefox": "64", // or whatever target to choose .
+                  },
+                }]
+              ]
+            }
+          }
+        ]
+      },
+      externals: {
+        jquery: 'jQuery'
+      }
+    }))
+    .pipe(gulp.dest('build/js'));
+});
+
+
 
 // Таск для очистки папки
 gulp.task("clean", function () {
@@ -100,7 +145,7 @@ gulp.task("copy", function () {
     "source/fonts/**/*.{woff,woff2}", // Переносим шрифты
     "source/img/**", // Переносим картинки
     "source/js/**", // Переносим js
-    "source/*.{png,xml,ico,webmanifest,svg}" // Переносим фавиконки
+    "source/*.{png,xml,ico,webmanifest,svg,php}" // Переносим фавиконки
   ], {
     base: "source"
   })
@@ -113,6 +158,7 @@ gulp.task("build", gulp.series(
   "copy",
   "css",
   "scripts",
+  "webpack",
   "sprite",
   "html"
   ));
@@ -127,7 +173,7 @@ gulp.task("server", function () {
     ui: false
   });
   // Смотрит за файлами и перезагружает, если есть изменение
-  gulp.watch("source/sass/**/*.sass", gulp.series("css", "refresh"));
+  gulp.watch("source/sass/**/*.scss", gulp.series("css", "refresh"));
   gulp.watch("source/img/**/*.svg", gulp.series("sprite", "html", "refresh"));
   gulp.watch("source/*.html", gulp.series("html", "refresh"));
   gulp.watch("source/js/*.js", gulp.series("scripts", "refresh"));
@@ -141,3 +187,19 @@ gulp.task("refresh", function(done) {
 
 // npm start запустит автоматически слежение и сборку. т.е. вводишь npm start и работаешь, не загядывая больше в консоль, все будут делать за тебя :)
 gulp.task("start", gulp.series("build", "server"));
+
+
+
+gulp.task('sass', function () {
+  return gulp.src(sass_paths)
+
+    .pipe(sass().on('error', sass.logError))
+    .pipe(gulp.dest('source/css'));
+});
+
+
+
+gulp.task('watch', function() {
+  gulp.watch('source/sass/**/*.scss', gulp.parallel('sass'));
+  gulp.watch('source/sass/**/*.sass', gulp.parallel('sass'));
+});

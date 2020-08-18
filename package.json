@@ -4,9 +4,11 @@
   "private": true,
   "description": "example",
   "devDependencies": {
-    "@babel/core": "^7.2.0",
-    "@babel/preset-env": "^7.2.0",
+    "@babel/cli": "^7.10.5",
+    "@babel/core": "^7.10.5",
+    "@babel/preset-env": "^7.10.4",
     "autoprefixer": "9.1.x",
+    "babel-loader": "^8.1.0",
     "browser-sync": "2.24.x",
     "del": "^3.0.0",
     "gulp": "4.0.x",
@@ -23,7 +25,9 @@
     "gulp-svgstore": "^7.0.0",
     "gulp-uglify": "^3.0.1",
     "gulp-webp": "^3.0.0",
-    "posthtml-include": "^1.2.0"
+    "posthtml-include": "^1.2.0",
+    "webpack": "^4.44.1",
+    "webpack-stream": "^5.2.1"
   },
   "scripts": {
     "editorconfig": "editorconfig-cli",
@@ -48,6 +52,7 @@
     "node": "8.12"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.10.4",
     "firebase-tools": "^6.1.2",
     "gulp-sass": "^4.1.0"
   }
