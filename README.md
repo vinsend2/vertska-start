@@ -1,5 +1,3 @@
-# Проект «Vaily»
-
 <table>
   <thead>
     <tr>
@@ -30,5 +28,4 @@
 *	### `.gitignore`
 *	### `.travis.yml`
 *	### `package.json`
----
-<img src='mockup/vaily.png'>
+
